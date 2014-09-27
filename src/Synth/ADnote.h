@@ -89,6 +89,8 @@ class ADnote:public SynthNote
         inline void ComputeVoiceOscillatorFrequencyModulation(int nvoice,
                                                               int FMmode);
         //  inline void ComputeVoiceOscillatorFrequencyModulation(int nvoice);
+        /**Computes the Ring Modulated Oscillator.*/
+        inline void ComputeVoiceOscillatorWaveTableModulation(int nvoice);
         /**TODO*/
         inline void ComputeVoiceOscillatorPitchModulation(int nvoice);
 
@@ -176,6 +178,7 @@ class ADnote:public SynthNote
 
             /* Waveform of the Voice */
             float *OscilSmp;
+	    base_func _base_func = nullptr; //!< bypass for wavetable modulation
 
             /* preserved for phase mod PWM emulation. */
             int phase_offset;
@@ -299,6 +302,10 @@ class ADnote:public SynthNote
         float  *tmpwavel;
         float  *tmpwaver;
         int     max_unison;
+
+	//! Array of buffers, one for each unison waves
+	//! These are the waves computed before FM
+	//! (however, they are computed *in* the FM functions)
         float **tmpwave_unison;
 
         //Filter bypass samples
