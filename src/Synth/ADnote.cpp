@@ -1585,7 +1585,7 @@ inline void ADnote::ComputeVoiceOscillatorWaveTableModulation(int nvoice)
 	    for(i = 0; i < synth->buffersize; ++i)
 		tw[i] *= FMnewamplitude[nvoice];
 	}
-
+// TODO: also normalize here?
 
 
 
