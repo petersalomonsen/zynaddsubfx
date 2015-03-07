@@ -20,6 +20,8 @@
 #include "../Params/ADnoteParameters.h"
 #include "../Params/Controller.h"
 
+typedef float (*base_func)(float, float);
+
 //Globals
 
 /**FM amplitude tune*/
