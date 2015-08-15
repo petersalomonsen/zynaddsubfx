@@ -316,7 +316,7 @@ ADnote::ADnote(ADnoteParameters *pars_, SynthParams &spars,
                                              getvoicebasefreq(nvoice),
                                              pars.VoicePar[nvoice].Presonance);
 	NoteVoicePar[nvoice]._base_func =
-	    getBaseFunction(/*pars->VoicePar[vc].OscilSmp->Pcurrentbasefunc*/3); // TODO
+	    getBaseFunction(pars.VoicePar[vc].OscilSmp->Pcurrentbasefunc);
 
         // This code was planned for biasing the carrier in MOD_RING
         // but that's on hold for the moment.  Disabled 'cos small
