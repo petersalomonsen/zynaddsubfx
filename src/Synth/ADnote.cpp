@@ -1542,7 +1542,7 @@ inline void ADnote::ComputeVoiceOscillatorWaveTableModulation(int nvoice)
 	for(int k = 0; k < unison_size[nvoice]; ++k) {
 	    float *tw = tmpwave_unison[k];
 	    memcpy(tw, NoteVoicePar[NoteVoicePar[nvoice].FMVoice].VoiceOut,
-		   synth->bufferbytes);
+		   synth.bufferbytes);
 	}
     else
 	//Compute the modulator and store it in tmpwave_unison[][]
@@ -1553,7 +1553,7 @@ inline void ADnote::ComputeVoiceOscillatorWaveTableModulation(int nvoice)
 	    float  freqloFM = oscfreqloFM[nvoice][k];
 	    float *tw = tmpwave_unison[k];
 
-	    for(i = 0; i < synth->buffersize; ++i) {
+	    for(i = 0; i < synth.buffersize; ++i) {
 		tw[i] =
 		    (NoteVoicePar[nvoice].FMSmp[poshiFM] * (1.0f - posloFM)
 		     + NoteVoicePar[nvoice].FMSmp[poshiFM + 1] * posloFM);
@@ -1563,7 +1563,7 @@ inline void ADnote::ComputeVoiceOscillatorWaveTableModulation(int nvoice)
 		    poshiFM++;
 		}
 		poshiFM += freqhiFM;
-		poshiFM &= synth->oscilsize - 1;
+		poshiFM &= synth.oscilsize - 1;
 	    }
 	    oscposhiFM[nvoice][k] = poshiFM;
 	    oscposloFM[nvoice][k] = posloFM;
@@ -1573,16 +1573,16 @@ inline void ADnote::ComputeVoiceOscillatorWaveTableModulation(int nvoice)
 				 FMnewamplitude[nvoice]))
 	for(int k = 0; k < unison_size[nvoice]; ++k) {
 	    float *tw = tmpwave_unison[k];
-	    for(i = 0; i < synth->buffersize; ++i)
+	    for(i = 0; i < synth.buffersize; ++i)
 		tw[i] *= INTERPOLATE_AMPLITUDE(FMoldamplitude[nvoice],
 					       FMnewamplitude[nvoice],
 					       i,
-					       synth->buffersize);
+					       synth.buffersize);
 	}
     else
 	for(int k = 0; k < unison_size[nvoice]; ++k) {
 	    float *tw = tmpwave_unison[k];
-	    for(i = 0; i < synth->buffersize; ++i)
+	    for(i = 0; i < synth.buffersize; ++i)
 		tw[i] *= FMnewamplitude[nvoice];
 	}
 // TODO: also normalize here?
@@ -1607,9 +1607,9 @@ inline void ADnote::ComputeVoiceOscillatorWaveTableModulation(int nvoice)
 	float *tw     = tmpwave_unison[k];
 	assert(oscfreqlo[nvoice][k] < 1.0f);
 	//float ratio = synth->buffersize_f / synth->oscilsize_f;
-	float one_f = 1.0f / synth->oscilsize_f;
+	float one_f = 1.0f / synth.oscilsize_f;
 
-	for(int i = 0; i < synth->buffersize; ++i) {
+	for(int i = 0; i < synth.buffersize; ++i) {
 	    float oscil_pos = (float)poshi * one_f;
 
 
@@ -1620,7 +1620,7 @@ inline void ADnote::ComputeVoiceOscillatorWaveTableModulation(int nvoice)
 	    poslo += freqlo;
 	    poshi += freqhi + (poslo>>24);
 	    poslo &= 0xffffff;
-	    poshi &= synth->oscilsize - 1;
+	    poshi &= synth.oscilsize - 1;
 
 
 
