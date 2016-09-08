@@ -20,8 +20,6 @@
 #include "../Params/ADnoteParameters.h"
 #include "../Params/Controller.h"
 
-typedef float (*base_func)(float, float);
-
 //Globals
 
 /**FM amplitude tune*/
@@ -32,6 +30,8 @@ typedef float (*base_func)(float, float);
 /**The "additive" synthesizer*/
 class ADnote:public SynthNote
 {
+        typedef float (*base_func)(float, float);
+
     public:
         /**Constructor.
          * @param pars Note Parameters
@@ -180,7 +180,7 @@ class ADnote:public SynthNote
 
             /* Waveform of the Voice */
             float *OscilSmp;
-	    base_func _base_func = nullptr; //!< bypass for wavetable modulation
+            base_func basefunc = nullptr; //!< bypass for wavetable modulation
 
             /* preserved for phase mod PWM emulation. */
             int phase_offset;
@@ -305,9 +305,9 @@ class ADnote:public SynthNote
         float  *tmpwaver;
         int     max_unison;
 
-	//! Array of buffers, one for each unison waves
-	//! These are the waves computed before FM
-	//! (however, they are computed *in* the FM functions)
+        //! Array of buffers, one for each unison wave
+        //! These are the waves computed before modulation
+        //! (however, they are also modified while computing the modulation)
         float **tmpwave_unison;
 
         //Filter bypass samples

@@ -16,6 +16,7 @@
 #include <cstdio>
 #include <cstring>
 #include <cassert>
+#include <algorithm>
 #include <stdint.h>
 
 #include "../globals.h"
@@ -315,8 +316,9 @@ ADnote::ADnote(ADnoteParameters *pars_, SynthParams &spars,
             pars.VoicePar[vc].OscilSmp->get(NoteVoicePar[nvoice].OscilSmp,
                                              getvoicebasefreq(nvoice),
                                              pars.VoicePar[nvoice].Presonance);
-	NoteVoicePar[nvoice]._base_func =
-	    getBaseFunction(pars.VoicePar[vc].OscilSmp->Pcurrentbasefunc);
+        // WaveTable does not need the precomputed samples, but the base func
+        NoteVoicePar[nvoice].basefunc =
+            getBaseFunction(pars.VoicePar[vc].OscilSmp->Pcurrentbasefunc);
 
         // This code was planned for biasing the carrier in MOD_RING
         // but that's on hold for the moment.  Disabled 'cos small
@@ -575,8 +577,9 @@ void ADnote::legatonote(LegatoParams lpars)
         pars.VoicePar[vc].OscilSmp->get(NoteVoicePar[nvoice].OscilSmp,
                                          getvoicebasefreq(nvoice),
                                          pars.VoicePar[nvoice].Presonance); //(gf)Modif of the above line.
-	NoteVoicePar[nvoice]._base_func =
-	   getBaseFunction(pars.VoicePar[vc].OscilSmp->Pcurrentbasefunc);
+        // WaveTable does not need the precomputed samples, but the base func
+        NoteVoicePar[nvoice].basefunc =
+           getBaseFunction(pars.VoicePar[vc].OscilSmp->Pcurrentbasefunc);
 
         //I store the first elments to the last position for speedups
         for(int i = 0; i < OSCIL_SMP_EXTRA_SAMPLES; ++i)
@@ -1374,9 +1377,6 @@ inline void ADnote::ComputeVoiceOscillatorRingModulation(int nvoice)
                                             FMnewamplitude[nvoice],
                                             i,
                                             synth.buffersize);
-		// tw is filled in initparameters
-		// in FreqMod and PulseMod, it is overwritten
-		// Why is tw not reset on every computecurrentparameters?
                 tw[i] *= (NoteVoicePar[nvoice].FMSmp[poshiFM] * (1.0f - posloFM)
                           + NoteVoicePar[nvoice].FMSmp[poshiFM
                                                        + 1] * posloFM) * amp
@@ -1535,102 +1535,87 @@ inline void ADnote::ComputeVoiceOscillatorFrequencyModulation(int nvoice,
  */
 inline void ADnote::ComputeVoiceOscillatorWaveTableModulation(int nvoice)
 {
- int   i;
-// THIS IS JUST COPIED FROM PM/FM:
-    if(NoteVoicePar[nvoice].FMVoice >= 0)
-	//if I use VoiceOut[] as modulator
-	for(int k = 0; k < unison_size[nvoice]; ++k) {
-	    float *tw = tmpwave_unison[k];
-	    memcpy(tw, NoteVoicePar[NoteVoicePar[nvoice].FMVoice].VoiceOut,
-		   synth.bufferbytes);
-	}
-    else
-	//Compute the modulator and store it in tmpwave_unison[][]
-	for(int k = 0; k < unison_size[nvoice]; ++k) {
-	    int    poshiFM  = oscposhiFM[nvoice][k];
-	    float  posloFM  = oscposloFM[nvoice][k];
-	    int    freqhiFM = oscfreqhiFM[nvoice][k];
-	    float  freqloFM = oscfreqloFM[nvoice][k];
-	    float *tw = tmpwave_unison[k];
+    int i;
 
-	    for(i = 0; i < synth.buffersize; ++i) {
-		tw[i] =
-		    (NoteVoicePar[nvoice].FMSmp[poshiFM] * (1.0f - posloFM)
-		     + NoteVoicePar[nvoice].FMSmp[poshiFM + 1] * posloFM);
-		posloFM += freqloFM;
-		if(posloFM >= 1.0f) {
-		    posloFM = fmod(posloFM, 1.0f);
-		    poshiFM++;
-		}
-		poshiFM += freqhiFM;
-		poshiFM &= synth.oscilsize - 1;
-	    }
-	    oscposhiFM[nvoice][k] = poshiFM;
-	    oscposloFM[nvoice][k] = posloFM;
-	}
+    // the following code is just copied from PM/FM
+    if(NoteVoicePar[nvoice].FMVoice >= 0)
+        //if I use VoiceOut[] as modulator
+        for(int k = 0; k < unison_size[nvoice]; ++k) {
+            float *tw = tmpwave_unison[k];
+            memcpy(tw, NoteVoicePar[NoteVoicePar[nvoice].FMVoice].VoiceOut,
+        	   synth.bufferbytes);
+        }
+    else
+        //Compute the modulator and store it in tmpwave_unison[][]
+        for(int k = 0; k < unison_size[nvoice]; ++k) {
+            int    poshiFM  = oscposhiFM[nvoice][k];
+            float  posloFM  = oscposloFM[nvoice][k];
+            int    freqhiFM = oscfreqhiFM[nvoice][k];
+            float  freqloFM = oscfreqloFM[nvoice][k];
+            float *tw = tmpwave_unison[k];
+
+            for(i = 0; i < synth.buffersize; ++i) {
+                tw[i] =
+                    (NoteVoicePar[nvoice].FMSmp[poshiFM] * (1.0f - posloFM)
+                     + NoteVoicePar[nvoice].FMSmp[poshiFM + 1] * posloFM);
+                posloFM += freqloFM;
+                if(posloFM >= 1.0f) {
+                    posloFM = fmod(posloFM, 1.0f);
+                    poshiFM++;
+                }
+                poshiFM += freqhiFM;
+                poshiFM &= synth.oscilsize - 1;
+            }
+            oscposhiFM[nvoice][k] = poshiFM;
+            oscposloFM[nvoice][k] = posloFM;
+        }
     // Amplitude interpolation
     if(ABOVE_AMPLITUDE_THRESHOLD(FMoldamplitude[nvoice],
-				 FMnewamplitude[nvoice]))
-	for(int k = 0; k < unison_size[nvoice]; ++k) {
-	    float *tw = tmpwave_unison[k];
-	    for(i = 0; i < synth.buffersize; ++i)
-		tw[i] *= INTERPOLATE_AMPLITUDE(FMoldamplitude[nvoice],
-					       FMnewamplitude[nvoice],
-					       i,
-					       synth.buffersize);
-	}
+                                 FMnewamplitude[nvoice]))
+        for(int k = 0; k < unison_size[nvoice]; ++k) {
+            float *tw = tmpwave_unison[k];
+            for(i = 0; i < synth.buffersize; ++i)
+                tw[i] *= INTERPOLATE_AMPLITUDE(FMoldamplitude[nvoice],
+                                               FMnewamplitude[nvoice],
+                                               i,
+                                               synth.buffersize);
+        }
     else
-	for(int k = 0; k < unison_size[nvoice]; ++k) {
-	    float *tw = tmpwave_unison[k];
-	    for(i = 0; i < synth.buffersize; ++i)
-		tw[i] *= FMnewamplitude[nvoice];
-	}
-// TODO: also normalize here?
+        for(int k = 0; k < unison_size[nvoice]; ++k) {
+            float *tw = tmpwave_unison[k];
+            for(i = 0; i < synth.buffersize; ++i)
+            tw[i] *= FMnewamplitude[nvoice];
+        }
 
-
-
-// THIS IS THE NEW CODE:
-
-
+    // WaveTable-specific code
     for(int k = 0; k < unison_size[nvoice]; ++k) {
-	int    poshi  = oscposhi[nvoice][k];
-	int    poslo  = oscposlo[nvoice][k] * (1<<24);
-	int    freqhi = oscfreqhi[nvoice][k];
-	int    freqlo = oscfreqlo[nvoice][k] * (1<<24);
+        int    poshi  = oscposhi[nvoice][k];
+        int    poslo  = oscposlo[nvoice][k] * (1<<24);
+        int    freqhi = oscfreqhi[nvoice][k];
+        int    freqlo = oscfreqlo[nvoice][k] * (1<<24);
 
+        base_func func = NoteVoicePar[nvoice].basefunc;
+        assert(func);
 
+        float *tw     = tmpwave_unison[k];
+        assert(oscfreqlo[nvoice][k] < 1.0f);
+        float oscilsize_inv = 1.0f / synth.oscilsize_f;
 
-	//float *smps   = NoteVoicePar[nvoice].OscilSmp;
-	base_func func = NoteVoicePar[nvoice]._base_func;
-	assert(func);
+        for(int i = 0; i < synth.buffersize; ++i) {
 
-	float *tw     = tmpwave_unison[k];
-	assert(oscfreqlo[nvoice][k] < 1.0f);
-	//float ratio = synth->buffersize_f / synth->oscilsize_f;
-	float one_f = 1.0f / synth.oscilsize_f;
+            float oscil_pos = (float)poshi * oscilsize_inv;
+            float par = tw[i] + 0.5f; // fm is in [-.5, .5], we need [.0,1.0]
 
-	for(int i = 0; i < synth.buffersize; ++i) {
-	    float oscil_pos = (float)poshi * one_f;
-
-
-	float par = tw[i] + 0.5f; // fm is in [-.5, .5], we need [.0,1.0]
-
-	    //((float)i) / synth->buffersize_f;
-	    tw[i]  = (func(oscil_pos, par) * ((1<<24) - poslo) + func(oscil_pos + one_f, par) * poslo)/(1.0f*(1<<24));
-	    poslo += freqlo;
-	    poshi += freqhi + (poslo>>24);
-	    poslo &= 0xffffff;
-	    poshi &= synth.oscilsize - 1;
-
-
-
-
-
-
-
-	}
-	oscposhi[nvoice][k] = poshi;
-	oscposlo[nvoice][k] = poslo/(1.0f*(1<<24));
+            tw[i]  = (func(oscil_pos, par) * ((1<<24) - poslo) +
+                      func(oscil_pos + oscilsize_inv, par) * poslo)
+                     / (1.0f*(1<<24));
+            poslo += freqlo;
+            poshi += freqhi + (poslo>>24);
+            poslo &= 0xffffff;
+            poshi &= synth.oscilsize - 1;
+        }
+        oscposhi[nvoice][k] = poshi;
+        oscposlo[nvoice][k] = poslo/(1.0f*(1<<24));
     }
 }
 
