@@ -370,7 +370,6 @@ ADnote::ADnote(ADnoteParameters *pars_, SynthParams &spars,
         NoteVoicePar[nvoice].filterbypass =
             pars.VoicePar[nvoice].Pfilterbypass;
 
-<<<<<<< 0776bad2080e0a860913f5d50b26f72c6fb820b1
         if (pars.VoicePar[nvoice].Type != 0)
             NoteVoicePar[nvoice].FMEnabled = NONE;
         else
@@ -390,33 +389,12 @@ ADnote::ADnote(ADnoteParameters *pars_, SynthParams &spars,
                 case 5:
                     NoteVoicePar[nvoice].FMEnabled = PW_MOD;
                     break;
+                case 6:
+                    NoteVoicePar[nvoice].FMEnabled = WAVE_MOD;
+                    break;
                 default:
                     NoteVoicePar[nvoice].FMEnabled = NONE;
             }
-=======
-        switch(pars.VoicePar[nvoice].PFMEnabled) {
-            case 1:
-                NoteVoicePar[nvoice].FMEnabled = MORPH;
-                break;
-            case 2:
-                NoteVoicePar[nvoice].FMEnabled = RING_MOD;
-                break;
-            case 3:
-                NoteVoicePar[nvoice].FMEnabled = PHASE_MOD;
-                break;
-            case 4:
-                NoteVoicePar[nvoice].FMEnabled = FREQ_MOD;
-                break;
-            case 5:
-                NoteVoicePar[nvoice].FMEnabled = WAVE_MOD;
-                break;
-            case 6:
-                NoteVoicePar[nvoice].FMEnabled = PITCH_MOD;
-                break;
-            default:
-                NoteVoicePar[nvoice].FMEnabled = NONE;
-        }
->>>>>>> base func initially working.
 
         NoteVoicePar[nvoice].FMVoice = pars.VoicePar[nvoice].PFMVoice;
         NoteVoicePar[nvoice].FMFreqEnvelope = NULL;
@@ -1527,15 +1505,17 @@ inline void ADnote::ComputeVoiceOscillatorFrequencyModulation(int nvoice,
     }
 }
 
-
-<<<<<<< 0776bad2080e0a860913f5d50b26f72c6fb820b1
-=======
 /*
  * Computes the Oscillator (WaveTable Modulation)
  */
 inline void ADnote::ComputeVoiceOscillatorWaveTableModulation(int nvoice)
 {
     int i;
+    // sine wave has no modulation parameters
+    if(!NoteVoicePar[nvoice].basefunc) {
+        ComputeVoiceOscillator_LinearInterpolation(nvoice);
+        return;
+    }
 
     // the following code is just copied from PM/FM
     if(NoteVoicePar[nvoice].FMVoice >= 0)
@@ -1619,14 +1599,6 @@ inline void ADnote::ComputeVoiceOscillatorWaveTableModulation(int nvoice)
     }
 }
 
-
-/*Calculeaza Oscilatorul cu PITCH MODULATION*/
-inline void ADnote::ComputeVoiceOscillatorPitchModulation(int /*nvoice*/)
-{
-//TODO
-}
-
->>>>>>> base func initially working.
 /*
  * Computes the Noise
  */
@@ -1689,7 +1661,6 @@ int ADnote::noteout(float *outl, float *outr)
         if((NoteVoicePar[nvoice].Enabled != ON)
            || (NoteVoicePar[nvoice].DelayTicks > 0))
             continue;
-<<<<<<< 0776bad2080e0a860913f5d50b26f72c6fb820b1
         switch (NoteVoicePar[nvoice].noisetype) {
             case 0: //voice mode=sound
                 switch(NoteVoicePar[nvoice].FMEnabled) {
@@ -1704,6 +1675,9 @@ int ADnote::noteout(float *outl, float *outr)
                     case PW_MOD:
                         ComputeVoiceOscillatorFrequencyModulation(nvoice,
                                                                   NoteVoicePar[nvoice].FMEnabled);
+                        break;
+                    case WAVE_MOD:
+                        ComputeVoiceOscillatorWaveTableModulation(nvoice);
                         break;
                     default:
                         ComputeVoiceOscillator_LinearInterpolation(nvoice);
@@ -1720,32 +1694,6 @@ int ADnote::noteout(float *outl, float *outr)
                 ComputeVoiceDC(nvoice);
                 break;
         }
-=======
-        if(NoteVoicePar[nvoice].noisetype == 0) //voice mode=sound
-            switch(NoteVoicePar[nvoice].FMEnabled) {
-                case MORPH:
-                    ComputeVoiceOscillatorMorph(nvoice);
-                    break;
-                case RING_MOD:
-                    ComputeVoiceOscillatorRingModulation(nvoice);
-                    break;
-                case PHASE_MOD:
-                    ComputeVoiceOscillatorFrequencyModulation(nvoice, 0);
-                    break;
-                case FREQ_MOD:
-                    ComputeVoiceOscillatorFrequencyModulation(nvoice, 1);
-                    break;
-                case WAVE_MOD:
-                    ComputeVoiceOscillatorWaveTableModulation(nvoice);
-                    break;
-                //case PITCH_MOD:ComputeVoiceOscillatorPitchModulation(nvoice);break;
-                default:
-                    ComputeVoiceOscillator_LinearInterpolation(nvoice);
-                    //if (config.cfg.Interpolation) ComputeVoiceOscillator_CubicInterpolation(nvoice);
-            }
-        else
-            ComputeVoiceNoise(nvoice);
->>>>>>> base func initially working.
         // Voice Processing
 
 
