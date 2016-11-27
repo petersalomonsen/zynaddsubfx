@@ -103,6 +103,48 @@ T array_max(const T *data, size_t len)
     return max;
 }
 
+#if 0
+/**
+ * Take frequency spectrum and ensure values are normalized based upon
+ * magnitude to 0<=x<=1
+ */
+template<class T>
+void normalize(T *freqs, int oscilsize)
+{
+    float normMax = 0.0f;
+    for(int i = 0; i < oscilsize; ++i) {
+        //magnitude squared
+        const float norm = norm(freqs[i]);
+        if(normMax < norm)
+            normMax = norm;
+    }
+
+    const float max = sqrt(normMax);
+    if(max < 1e-8) //data is all ~zero, do not amplify noise
+        return;
+
+    for(int i = 0; i < oscilsize; ++i)
+        freqs[i] /= max;
+}
+
+//! Full RMS normalize
+template<class T>
+void rmsNormalize(T *freqs, int oscilsize)
+{
+    float sum = 0.0f;
+    for(int i = 1; i < oscilsize; ++i)
+        sum += norm(freqs[i]);
+
+    if(sum < 0.000001f)
+        return;  //data is all ~zero, do not amplify noise
+
+    const float gain = 1.0f / sqrt(sum);
+
+    for(int i = 1; i < oscilsize; ++i)
+        freqs[i] *= gain;
+}
+#endif
+
 //Random number generator
 
 typedef uint32_t prng_t;

@@ -275,6 +275,7 @@ inline float arg(const fft_t *freqs, off_t x)
     return arg(tmp);
 }
 
+#if 1
 /**
  * Take frequency spectrum and ensure values are normalized based upon
  * magnitude to 0<=x<=1
@@ -312,6 +313,7 @@ void rmsNormalize(fft_t *freqs, int oscilsize)
     for(int i = 1; i < oscilsize / 2; ++i)
         freqs[i] *= gain;
 }
+#endif
 
 #define DIFF(par) (old ## par != P ## par)
 
@@ -1095,7 +1097,7 @@ short int OscilGen::get(float *smps, float freqHz, int resonance)
     if((freqHz > 0.1f) && (resonance != 0))
         res->applyres(nyquist - 1, outoscilFFTfreqs, freqHz);
 
-    rmsNormalize(outoscilFFTfreqs, synth.oscilsize);
+    rmsNormalize(outoscilFFTfreqs, synth.oscilsize / 2);
 
     if((ADvsPAD) && (freqHz > 0.1f)) //in this case the smps will contain the freqs
         for(int i = 1; i < synth.oscilsize / 2; ++i)
@@ -1297,7 +1299,7 @@ void OscilGen::add2XML(XMLwrapper& xml)
     xml.endbranch();
 
     if(Pcurrentbasefunc == 127) {
-        normalize(basefuncFFTfreqs, synth.oscilsize);
+        normalize(basefuncFFTfreqs, synth.oscilsize / 2);
 
         xml.beginbranch("BASE_FUNCTION");
         for(int i = 1; i < synth.oscilsize / 2; ++i) {
@@ -1408,7 +1410,7 @@ void OscilGen::getfromXML(XMLwrapper& xml)
         xml.exitbranch();
 
         clearDC(basefuncFFTfreqs);
-        normalize(basefuncFFTfreqs, synth.oscilsize);
+        normalize(basefuncFFTfreqs, synth.oscilsize / 2);
         cachedbasevalid = false;
     }}
 
