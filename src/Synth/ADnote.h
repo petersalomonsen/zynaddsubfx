@@ -253,8 +253,8 @@ class ADnote:public SynthNote
         /*    INTERNAL VALUES OF THE NOTE AND OF THE VOICES     */
         /********************************************************/
 
-	//pinking filter (Paul Kellet)
-	float pinking[NUM_VOICES][14]; 
+        //pinking filter (Paul Kellet)
+        float pinking[NUM_VOICES][14];
 
         //the size of unison for a single voice
         int unison_size[NUM_VOICES];
