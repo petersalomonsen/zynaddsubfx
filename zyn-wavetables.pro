@@ -239,8 +239,11 @@ HEADERS += src/globals.h \
            /home/johannes/cprogs/zyn-wavetables/clang/src/UI/PresetsUI.h \
            /home/johannes/cprogs/zyn-wavetables/clang/src/UI/ResonanceUI.h \
            /home/johannes/cprogs/zyn-wavetables/clang/src/UI/SUBnoteUI.h \
-           /home/johannes/cprogs/zyn-wavetables/clang/src/UI/VirKeyboard.h
+           /home/johannes/cprogs/zyn-wavetables/clang/src/UI/VirKeyboard.h \
+    src/Synth/wavenormals.h \
+    src/Synth/basefunctions.h
 SOURCES += src/main.cpp \
+	   src/globals.cpp \
            tlsf/tlsf.c \
            clang/CMakeFiles/feature_tests.c \
            clang/CMakeFiles/feature_tests.cxx \
@@ -421,4 +424,6 @@ SOURCES += src/main.cpp \
            /home/johannes/cprogs/zyn-wavetables/clang/src/UI/PresetsUI.cxx \
            /home/johannes/cprogs/zyn-wavetables/clang/src/UI/ResonanceUI.cxx \
            /home/johannes/cprogs/zyn-wavetables/clang/src/UI/SUBnoteUI.cxx \
-           /home/johannes/cprogs/zyn-wavetables/clang/src/UI/VirKeyboard.cxx
+           /home/johannes/cprogs/zyn-wavetables/clang/src/UI/VirKeyboard.cxx \
+    src/Synth/wavenormalgen.cpp \
+    src/Synth/basefunctions.cpp
