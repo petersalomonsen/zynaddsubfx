@@ -18,6 +18,7 @@
 #include <rtosc/ports.h>
 #include "../Params/Presets.h"
 
+/** The oscillator generator. */
 class OscilGen:public Presets
 {
     public:
@@ -51,19 +52,22 @@ class OscilGen:public Presets
 
         //Parameters
 
+        constexpr static size_t numberOfBaseFunctions() { return 15; }
+
         /**
          * The hmag and hphase starts counting from 0, so the first harmonic(1) has the index 0,
-         * 2-nd harmonic has index 1, ..the 128 harminic has index 127
+         * 2-nd harmonic has index 1, ..the 128 harmonic has index 127
          */
         unsigned char Phmag[MAX_AD_HARMONICS], Phphase[MAX_AD_HARMONICS]; //the MIDI parameters for mag. and phases
 
-
-        /**The Type of magnitude:
-         *   0 - Linear
-         *   1 - dB scale (-40)
-         *   2 - dB scale (-60)
-         *   3 - dB scale (-80)
-         *   4 - dB scale (-100)*/
+        /**
+         * The Type of magnitude:
+         * - 0 - Linear
+         * - 1 - dB scale (-40)
+         * - 2 - dB scale (-60)
+         * - 3 - dB scale (-80)
+         * - 4 - dB scale (-100)
+         */
         unsigned char Phmagtype;
 
         unsigned char Pcurrentbasefunc; //The base function used - 0=sin, 1=...
@@ -84,12 +88,14 @@ class OscilGen:public Presets
         unsigned char Pmodulation; //what modulation is applied to the oscil
         unsigned char Pmodulationpar1, Pmodulationpar2, Pmodulationpar3; //the parameter of the parameters
 
-        /**Realtime parameters for ADnote*/
+        /*
+         * Realtime parameters for ADnote
+         */
 
-        /*the Randomness:
-          64=no randomness
-          63..0 - block type randomness - 0 is maximum
-          65..127 - each harmonic randomness - 127 is maximum*/
+        /** The Randomness:
+          + 64=no randomness
+          + 63..0 - block type randomness - 0 is maximum
+          + 65..127 - each harmonic randomness - 127 is maximum*/
         unsigned char Prand;
         unsigned char Pamprandpower, Pamprandtype; //amplitude randomness
         unsigned char Padaptiveharmonics; //the adaptive harmonics status (off=0,on=1,etc..)
@@ -103,19 +109,20 @@ class OscilGen:public Presets
         //this should be called every note on event
         void newrandseed(unsigned int randseed);
 
-        bool ADvsPAD; //if it is used by ADsynth or by PADsynth
+        bool ADvsPAD; //!< true iff it is used by PADsynth (instead of ADSynth)
 
         static const rtosc::MergePorts ports;
         static const rtosc::Ports      non_realtime_ports;
         static const rtosc::Ports      realtime_ports;
 
+    private:
         /* Oscillator Frequencies -
          *  this is different than the hamonics set-up by the user,
          *  it may contains time-domain data if the antialiasing is turned off*/
         fft_t *oscilFFTfreqs;
 
         fft_t *pendingfreqs;
-    private:
+
         //This array stores some termporary data and it has OSCIL_SIZE elements
         float *tmpsmps;
         fft_t *outoscilFFTfreqs;
@@ -125,6 +132,8 @@ class OscilGen:public Presets
         float hmag[MAX_AD_HARMONICS], hphase[MAX_AD_HARMONICS]; //the magnituides and the phases of the sine/nonsine harmonics
 
         FFTwrapper *fft;
+        //! returns slightly corrected Pbasefuncpar for internal use
+        static float correctedBaseFuncPar(unsigned char par);
         //computes the basefunction and make the FFT; newbasefunc<0  = same basefunc
         void changebasefunction(void);
         //Waveshaping
@@ -174,7 +183,7 @@ class OscilGen:public Presets
         Resonance *res;
 
         unsigned int randseed;
-    public:
+public:
         const SYNTH_T &synth;
 };
 

@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <stdint.h>
 
+#include "basefunctions.h"
 #include "../globals.h"
 #include "../Misc/Util.h"
 #include "../Misc/Allocator.h"
@@ -27,6 +28,7 @@
 #include "ModFilter.h"
 #include "OscilGen.h"
 #include "ADnote.h"
+#include "wavenormals.h"
 
 ADnote::ADnote(ADnoteParameters *pars_, SynthParams &spars,
         WatchManager *wm, const char *prefix)
@@ -1567,6 +1569,7 @@ inline void ADnote::ComputeVoiceOscillatorWaveTableModulation(int nvoice)
             tw[i] *= FMnewamplitude[nvoice];
         }
 
+    unsigned char Pcurbasefunc = pars.VoicePar[nvoice].OscilSmp->Pcurrentbasefunc;
     // WaveTable-specific code
     for(int k = 0; k < unison_size[nvoice]; ++k) {
         int    poshi  = oscposhi[nvoice][k];
@@ -1580,15 +1583,30 @@ inline void ADnote::ComputeVoiceOscillatorWaveTableModulation(int nvoice)
         float *tw     = tmpwave_unison[k];
         assert(oscfreqlo[nvoice][k] < 1.0f);
         float oscilsize_inv = 1.0f / synth.oscilsize_f;
-
+        static float lastrms=0.0f;
         for(int i = 0; i < synth.buffersize; ++i) {
 
             float oscil_pos = (float)poshi * oscilsize_inv;
+
+            // TODO: correct parameter, like in OscilGen ?
             float par = tw[i] + 0.5f; // fm is in [-.5, .5], we need [.0,1.0]
+
+            // TODO: interpolate rms value
+            //printf("%d %f %d\n",Pcurbasefunc-1,par,((std::size_t)(par*128))<<2);
+            float rms = getWavenormals()[Pcurbasefunc-1]
+                            [((std::size_t)(par*128))<<2];
+
+            if(fabs(rms - lastrms) > 0.1f)
+            {
+                printf("%d %f %d\n",Pcurbasefunc-1,par,((std::size_t)(par*128))<<2);
+                printf("rms:%f\n", rms);
+                lastrms=rms;
+            }
 
             tw[i]  = (func(oscil_pos, par) * ((1<<24) - poslo) +
                       func(oscil_pos + oscilsize_inv, par) * poslo)
                      / (1.0f*(1<<24));
+            tw[i] /= rms;
             poslo += freqlo;
             poshi += freqhi + (poslo>>24);
             poslo &= 0xffffff;
