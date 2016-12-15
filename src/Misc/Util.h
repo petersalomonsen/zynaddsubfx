@@ -103,63 +103,6 @@ T array_max(const T *data, size_t len)
     return max;
 }
 
-#if 0
-/**
- * Take frequency spectrum and ensure values are normalized based upon
- * magnitude to 0<=x<=1
- */
-template<class T, bool Apply = true>
-float normalize(T &freqs, int oscilsize, int apply)
-{
-    float normMax = 0.0f;
-    for(int i = 0; i < oscilsize; ++i) {
-        //magnitude squared
-        const float norm = std::norm(freqs[i]);
-        if(normMax < norm)
-            normMax = norm;
-    }
-
-    const float max = sqrt(normMax);
-    if(max < 1e-8) //data is all ~zero, do not amplify noise
-        return 1.0f;
-
-    for(int i = 0; i < apply; ++i)
-        freqs[i] /= max;
-
-    return max;
-}
-
-template<class T, bool Apply = true>
-float normalize(T &freqs, int oscilsize)
-{
-    return normalize<T, Apply>(freqs, oscilsize, oscilsize);
-}
-
-//! Full root-square normalize
-template<class T, bool Apply = true>
-float rsNormalize(T &freqs, int oscilsize)
-{
-    float sum = 0.0f;
-    for(int i = 1; i < oscilsize; ++i)
-        sum += std::norm(freqs[i]);
-
-    if(sum < 0.000001f)
-        return 1.0f;  //data is all ~zero, do not amplify noise
-
-    const float gain = 1.0f / sqrt(sum);
-
-    for(int i = 1; i < apply; ++i)
-        freqs[i] *= gain;
-
-    return 1.0f / gain;
-}
-
-template<class T, bool Apply = true>
-float rsNormalize(T &freqs, int oscilsize) {
-    return rsNormalize<T, Apply>(freqs, oscilsize, oscilsize);
-}
-#endif
-
 //Random number generator
 
 typedef uint32_t prng_t;
