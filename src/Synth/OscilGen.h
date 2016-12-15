@@ -52,8 +52,6 @@ class OscilGen:public Presets
 
         //Parameters
 
-        constexpr static size_t numberOfBaseFunctions() { return 15; }
-
         /**
          * The hmag and hphase starts counting from 0, so the first harmonic(1) has the index 0,
          * 2-nd harmonic has index 1, ..the 128 harmonic has index 127
@@ -132,8 +130,6 @@ class OscilGen:public Presets
         float hmag[MAX_AD_HARMONICS], hphase[MAX_AD_HARMONICS]; //the magnituides and the phases of the sine/nonsine harmonics
 
         FFTwrapper *fft;
-        //! returns slightly corrected Pbasefuncpar for internal use
-        static float correctedBaseFuncPar(unsigned char par);
         //computes the basefunction and make the FFT; newbasefunc<0  = same basefunc
         void changebasefunction(void);
         //Waveshaping

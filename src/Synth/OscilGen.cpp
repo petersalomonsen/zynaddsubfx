@@ -473,20 +473,14 @@ float OscilGen::userfunc(float x)
                         synth.oscilsize * (x + 1) - 1);
 }
 
-float OscilGen::correctedBaseFuncPar(unsigned char par)
-{
-    float result = (par + 0.5f) / 128.0f;
-    if(par == 64)
-        result = 0.5f;
-    return result;
-}
-
 /*
  * Get the base function
  */
 void OscilGen::getbasefunction(float *smps)
 {
-    float par = correctedBaseFuncPar(Pbasefuncpar);
+    float par = (Pbasefuncpar + 0.5f) / 128.0f;
+    if(Pbasefuncpar == 64)
+        par = 0.5f;
 
     float p1 = Pbasefuncmodulationpar1 / 127.0f,
           p2 = Pbasefuncmodulationpar2 / 127.0f,
