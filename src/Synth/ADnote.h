@@ -233,7 +233,12 @@ class ADnote:public SynthNote
 
             unsigned char FMFreqFixed;
 
+            //! if >= 0, number of the voice which functions as modulator
             int FMVoice;
+            //! max-normalise factor for the modulator
+            //! We usually assumed that the modulator would be in range [-0.5, 0.5].
+            //! However, this is not always true
+            float normalise_modulator = 1.0f;
 
             // Voice Output used by other voices if use this as modullator
             float *VoiceOut;

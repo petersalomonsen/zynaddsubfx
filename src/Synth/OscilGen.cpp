@@ -576,7 +576,7 @@ void OscilGen::changebasefunction(void)
     oldbasefuncmodulationpar3 = Pbasefuncmodulationpar3;
 }
 
-inline float normalize(float* smps, size_t N)
+inline void normalize(float *smps, size_t N)
 {
     //Find max
     float max = 0.0f;
@@ -589,8 +589,6 @@ inline float normalize(float* smps, size_t N)
     //Normalize to +-1
     for(size_t i = 0; i < N; ++i)
         smps[i] /= max;
-
-    return max;
 }
 
 /*
@@ -1099,7 +1097,7 @@ short int OscilGen::get(float *smps, float freqHz, int resonance)
     if((freqHz > 0.1f) && (resonance != 0))
         res->applyres(nyquist - 1, outoscilFFTfreqs, freqHz);
 
-    rsNormalize(outoscilFFTfreqs, synth.oscilsize / 2);
+    rsNormalize(outoscilFFTfreqs, synth.oscilsize);
 
     if((ADvsPAD) && (freqHz > 0.1f)) //in this case the smps will contain the freqs
         for(int i = 1; i < synth.oscilsize / 2; ++i)
@@ -1301,7 +1299,7 @@ void OscilGen::add2XML(XMLwrapper& xml)
     xml.endbranch();
 
     if(Pcurrentbasefunc == 127) {
-        normalize(basefuncFFTfreqs, synth.oscilsize / 2);
+        normalize(basefuncFFTfreqs, synth.oscilsize);
 
         xml.beginbranch("BASE_FUNCTION");
         for(int i = 1; i < synth.oscilsize / 2; ++i) {
@@ -1412,7 +1410,7 @@ void OscilGen::getfromXML(XMLwrapper& xml)
         xml.exitbranch();
 
         clearDC(basefuncFFTfreqs);
-        normalize(basefuncFFTfreqs, synth.oscilsize / 2);
+        normalize(basefuncFFTfreqs, synth.oscilsize);
         cachedbasevalid = false;
     }}
 

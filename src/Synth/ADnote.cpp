@@ -403,6 +403,8 @@ ADnote::ADnote(ADnoteParameters *pars_, SynthParams &spars,
         NoteVoicePar[nvoice].FMAmpEnvelope  = NULL;
         NoteVoicePar[nvoice].FMFreqFixed  = pars.VoicePar[nvoice].PFMFixedFreq;
 
+        // WaveTable modulation needs to scale FMVoice into [-0.5;0.5]
+
 
         //Compute the Voice's modulator volume (incl. damping)
         float fmvoldamp = powf(440.0f / getvoicebasefreq(
@@ -1457,8 +1459,12 @@ inline void ADnote::ComputeVoiceOscillatorFrequencyModulation(int nvoice,
         const float normalize = synth.oscilsize_f / 262144.0f;
         for(int k = 0; k < unison_size[nvoice]; ++k) {
             float *tw = tmpwave_unison[k];
-            for(int i = 0; i < synth.buffersize; ++i)
+	    float min = 1.0f;
+            for(int i = 0; i < synth.buffersize; ++i) {
+		min = std::min(tw[i], min);
                 tw[i] *= normalize;
+	    }
+	    printf("min: %f\n",min);
         }
     }
 
@@ -1589,11 +1595,12 @@ inline void ADnote::ComputeVoiceOscillatorWaveTableModulation(int nvoice)
             float oscil_pos = (float)poshi * oscilsize_inv;
 
             // TODO: correct parameter, like in OscilGen ?
-            float par = tw[i] + 0.5f; // fm is in [-.5, .5], we need [.0,1.0]
+            // fm is in [-.5, .5], we need [.0,1.0]
+            float par = std::max(0.0f, std::min(1.0f, tw[i] + 0.5f));
 
-            //printf("%d %f %d\n",Pcurbasefunc-1,par,((std::size_t)(par*128))<<2);
+            printf("%d %f %d\n",Pcurbasefunc-1,par,(std::size_t)(par*511.0f));
             float rms = getWavenormals()[Pcurbasefunc-1]
-                            [(std::size_t)(par*512.0f)];
+                            [(std::size_t)(par*511.0f)];
 
 /*            if(fabs(rms - lastrms) > 0.1f)
             {

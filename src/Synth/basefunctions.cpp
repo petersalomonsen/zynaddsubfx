@@ -407,7 +407,7 @@ float rmsValue(T&& smps, size_t N)
     return sqrt(sum / N);
 }
 
-float normalOfBaseFunction(unsigned char func,
+float rmsNormalOfBaseFunction(unsigned char func,
     int oscilsize, unsigned char basefuncpar)
 {
     struct
@@ -429,3 +429,11 @@ float normalOfBaseFunction(unsigned char func,
     return rmsValue(baseFuncCalculator, oscilsize);
 }
 
+
+float maxNormalOfBaseFunction(unsigned char func, unsigned char basefuncpar)
+{
+    switch(func)
+    {
+
+    }
+}
