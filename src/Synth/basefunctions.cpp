@@ -429,11 +429,3 @@ float rmsNormalOfBaseFunction(unsigned char func,
     return rmsValue(baseFuncCalculator, oscilsize);
 }
 
-
-float maxNormalOfBaseFunction(unsigned char func, unsigned char basefuncpar)
-{
-    switch(func)
-    {
-
-    }
-}

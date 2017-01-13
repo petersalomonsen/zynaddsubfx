@@ -22,7 +22,4 @@ filter_func getFilter(unsigned char func);
 float rmsNormalOfBaseFunction(unsigned char func,
     int oscilsize, unsigned char basefuncpar); // TODO: swap params
 
-float maxNormalOfBaseFunction(unsigned char func,
-    unsigned char basefuncpar);
-
 #endif // BASEFUNCTIONS_H

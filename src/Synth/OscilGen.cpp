@@ -576,7 +576,7 @@ void OscilGen::changebasefunction(void)
     oldbasefuncmodulationpar3 = Pbasefuncmodulationpar3;
 }
 
-inline void normalize(float *smps, size_t N)
+inline float normalize(float* smps, size_t N)
 {
     //Find max
     float max = 0.0f;
@@ -589,6 +589,8 @@ inline void normalize(float *smps, size_t N)
     //Normalize to +-1
     for(size_t i = 0; i < N; ++i)
         smps[i] /= max;
+
+    return max;
 }
 
 /*
@@ -1299,7 +1301,7 @@ void OscilGen::add2XML(XMLwrapper& xml)
     xml.endbranch();
 
     if(Pcurrentbasefunc == 127) {
-        normalize(basefuncFFTfreqs, synth.oscilsize);
+        normalize(basefuncFFTfreqs, synth.oscilsize / 2);
 
         xml.beginbranch("BASE_FUNCTION");
         for(int i = 1; i < synth.oscilsize / 2; ++i) {
@@ -1410,7 +1412,7 @@ void OscilGen::getfromXML(XMLwrapper& xml)
         xml.exitbranch();
 
         clearDC(basefuncFFTfreqs);
-        normalize(basefuncFFTfreqs, synth.oscilsize);
+        normalize(basefuncFFTfreqs, synth.oscilsize / 2);
         cachedbasevalid = false;
     }}
 
