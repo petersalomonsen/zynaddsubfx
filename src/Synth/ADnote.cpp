@@ -316,11 +316,17 @@ ADnote::ADnote(ADnoteParameters *pars_, SynthParams &spars,
             pars.VoicePar[vc].OscilSmp->newrandseed(prng());
         int oscposhi_start =
             pars.VoicePar[vc].OscilSmp->get(NoteVoicePar[nvoice].OscilSmp,
-                                             getvoicebasefreq(nvoice),
-                                             pars.VoicePar[nvoice].Presonance);
+                                            getvoicebasefreq(nvoice),
+                                            pars.VoicePar[nvoice].Presonance);
         // WaveTable does not need the precomputed samples, but the base func
         NoteVoicePar[nvoice].basefunc =
             getBaseFunction(pars.VoicePar[vc].OscilSmp->Pcurrentbasefunc);
+        {
+            char bfp = pars.VoicePar[nvoice].OscilSmp->Pbasefuncpar;
+            NoteVoicePar[nvoice].basefuncpar = (bfp == 64)
+                                             ? 0.5f // fix to get exact middle
+                                             : (((float)bfp) / 127.0f);
+        }
 
         // This code was planned for biasing the carrier in MOD_RING
         // but that's on hold for the moment.  Disabled 'cos small
@@ -402,9 +408,6 @@ ADnote::ADnote(ADnoteParameters *pars_, SynthParams &spars,
         NoteVoicePar[nvoice].FMFreqEnvelope = NULL;
         NoteVoicePar[nvoice].FMAmpEnvelope  = NULL;
         NoteVoicePar[nvoice].FMFreqFixed  = pars.VoicePar[nvoice].PFMFixedFreq;
-
-        // WaveTable modulation needs to scale FMVoice into [-0.5;0.5]
-
 
         //Compute the Voice's modulator volume (incl. damping)
         float fmvoldamp = powf(440.0f / getvoicebasefreq(
@@ -559,7 +562,7 @@ void ADnote::legatonote(LegatoParams lpars)
         pars.VoicePar[vc].OscilSmp->get(NoteVoicePar[nvoice].OscilSmp,
                                          getvoicebasefreq(nvoice),
                                          pars.VoicePar[nvoice].Presonance); //(gf)Modif of the above line.
-        // WaveTable does not need the precomputed samples, but the base func
+        //WaveTable does not need the precomputed samples, but the base func
         NoteVoicePar[nvoice].basefunc =
            getBaseFunction(pars.VoicePar[vc].OscilSmp->Pcurrentbasefunc);
 
@@ -918,6 +921,34 @@ void ADnote::initparameters(WatchManager *wm, const char *prefix)
             for(int k = 0; k < unison_size[nvoice]; ++k) {
                 oscposhiFM[nvoice][k] += oscposhiFM_add;
                 oscposhiFM[nvoice][k] %= synth.oscilsize;
+            }
+
+            // For WaveTable, we use FMSmp as a modulator. This is sometimes
+            // out of [-1,1]. Our modulator *must* be kept in range [0,1]
+            // note that the factor for 1.0 is 2.0 (precomputation)
+            if(NoteVoicePar[nvoice].FMEnabled == WAVE_MOD)
+            {
+                // if the basefuncpar is .4, a maximum oscillation
+                // runs through the wavetable from .0 to .8
+                // => max_space would be .4
+                float max_space = std::min(NoteVoicePar[nvoice].basefuncpar,
+                                           1.0f-NoteVoicePar[nvoice].basefuncpar);
+
+                if(NoteVoicePar[nvoice].FMVoice >= 0)
+                    // external voice, always in range
+                    NoteVoicePar[nvoice].FMSmpMax = (1.0f / max_space);
+                else
+                {
+                    // compute a max normalizer
+                    float max = 0.0f;
+                    for(int i = 0; i < synth.oscilsize; ++i) {
+                        max = std::max(max, fabsf(NoteVoicePar[nvoice].FMSmp[i]));
+                    }
+                    if(max < 0.1e-6)
+                        max = 1.0f;
+                    // by now, max fits 1.0f => apply max_space
+                    NoteVoicePar[nvoice].FMSmpMax = max / max_space;
+                }
             }
         }
 
@@ -1464,7 +1495,6 @@ inline void ADnote::ComputeVoiceOscillatorFrequencyModulation(int nvoice,
 		min = std::min(tw[i], min);
                 tw[i] *= normalize;
 	    }
-	    printf("min: %f\n",min);
         }
     }
 
@@ -1589,25 +1619,30 @@ inline void ADnote::ComputeVoiceOscillatorWaveTableModulation(int nvoice)
         float *tw     = tmpwave_unison[k];
         assert(oscfreqlo[nvoice][k] < 1.0f);
         float oscilsize_inv = 1.0f / synth.oscilsize_f;
-//        static float lastrms=0.0f;
+        // debugging variables:
+        // float minpar = 1.0f, maxpar = 0.0f;
+
         for(int i = 0; i < synth.buffersize; ++i) {
 
             float oscil_pos = (float)poshi * oscilsize_inv;
 
-            // TODO: correct parameter, like in OscilGen ?
-            // fm is in [-.5, .5], we need [.0,1.0]
-            float par = std::max(0.0f, std::min(1.0f, tw[i] + 0.5f));
+            // tw[i] is the original modulator
+            // FMSmpMax makes sure tw[i] is in range [-1,1]
+            // Also, FMSmpMax normalizes this, so the oscillating range is
+            // [-basefuncpar, +basefuncpar] or [1-basefuncpar, -1+basefuncpar]
+            // adding basefuncpar finally leads us to
+            // [0, 2*basefuncpar] or [1 - 2*basefuncpar, 1]
+            // The min()/max() calls are just for safety
+            float par = std::max(0.0f, std::min(1.0f,
+                (tw[i]/NoteVoicePar[nvoice].FMSmpMax) +
+                 NoteVoicePar[nvoice].basefuncpar));
+//          if(par != (tw[i]/NoteVoicePar[nvoice].FMSmpMax) + NoteVoicePar[nvoice].basefuncpar)
+//              printf("Error: %.2f != %.2f\n", par, (tw[i]/NoteVoicePar[nvoice].FMSmpMax) + NoteVoicePar[nvoice].basefuncpar);
 
-            printf("%d %f %d\n",Pcurbasefunc-1,par,(std::size_t)(par*511.0f));
+//          minpar = std::min(minpar, par);
+//          maxpar = std::max(maxpar, par);
             float rms = getWavenormals()[Pcurbasefunc-1]
                             [(std::size_t)(par*511.0f)];
-
-/*            if(fabs(rms - lastrms) > 0.1f)
-            {
-                printf("%d %f %d\n",Pcurbasefunc-1,par,((std::size_t)(par*128))<<2);
-                printf("rms:%f\n", rms);
-                lastrms=rms;
-            }*/
 
             tw[i]  = (func(oscil_pos, par) * ((1<<24) - poslo) +
                       func(oscil_pos + oscilsize_inv, par) * poslo)
@@ -1618,6 +1653,8 @@ inline void ADnote::ComputeVoiceOscillatorWaveTableModulation(int nvoice)
             poslo &= 0xffffff;
             poshi &= synth.oscilsize - 1;
         }
+        // printf("minmax: %f %f\n", minpar, maxpar);
+
         oscposhi[nvoice][k] = poshi;
         oscposlo[nvoice][k] = poslo/(1.0f*(1<<24));
     }

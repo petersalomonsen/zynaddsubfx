@@ -181,6 +181,7 @@ class ADnote:public SynthNote
             /* Waveform of the Voice */
             float *OscilSmp;
             base_func basefunc = nullptr; //!< bypass for wavetable modulation
+            float basefuncpar; //! [0,1.0]
 
             /* preserved for phase mod PWM emulation. */
             int phase_offset;
@@ -245,6 +246,7 @@ class ADnote:public SynthNote
 
             /* Wave of the Voice */
             float *FMSmp;
+            float FMSmpMax;
 
             float FMVolume;
             float FMDetune;  //in cents

@@ -40,7 +40,7 @@ int main()
             ++par)
         {
             std::cout << std::setprecision(6) << std::setw(4)
-                      << normalOfBaseFunction(func_no, 1024, par>>2)
+                      << rmsNormalOfBaseFunction(func_no, 1024, par>>2)
                       << 'f';
             if(par != values-1)
                 std::cout << ", ";
