@@ -1738,6 +1738,7 @@ void MiddleWareImpl::heartBeat(Master *master)
     if(offline) {
         if(last_beat == last_ack) {
             //XXX INSERT MESSAGE HERE ABOUT TRANSITION TO ONLINE
+            puts("-> ONLINE");
             offline = false;
 
             //Send new heart beat
@@ -1757,6 +1758,7 @@ void MiddleWareImpl::heartBeat(Master *master)
             //The backend has had 200 ms to acquire a new beat
             //The backend instead has an older beat
             //XXX INSERT MESSAGE HERE ABOUT TRANSITION TO OFFLINE
+            puts("-> OFFLINE");
             offline = true;
             return;
         }
