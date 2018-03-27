@@ -9,7 +9,6 @@ TODOs for default values:
 
 test:
 * zyn fx (all presets)
-* rtosc arg val maths
 
 finally:
 * remove rDefaultMissing if possible
