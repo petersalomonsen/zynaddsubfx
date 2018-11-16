@@ -26,7 +26,7 @@
 
 //Forward Declarations
 
-#if defined(__APPLE__) || defined(__FreeBSD__)
+#if defined(__APPLE__) || defined(__EMSCRIPTEN__) || defined(__FreeBSD__)
 #include <complex>
 #else
 namespace std {

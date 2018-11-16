@@ -12,7 +12,7 @@
 #ifndef ZYNSEMA_H
 #define ZYNSEMA_H
 
-#if defined __APPLE__ || defined WIN32
+#if defined __APPLE__ || defined __EMSCRIPTEN__ || defined WIN32
 
 #include <pthread.h>
 

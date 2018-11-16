@@ -10,7 +10,7 @@ include(CheckCXXCompilerFlag)
 if(NOT (${CMAKE_SYSTEM_NAME} STREQUAL "Windows"))
     find_package(PkgConfig)
 endif()
-find_package(zlib REQUIRED)
+#find_package(zlib REQUIRED)
 find_package(X11)
 find_package(Threads   REQUIRED)
 find_package(OSS)
@@ -30,8 +30,8 @@ if(PKG_CONFIG_FOUND AND NOT (${CMAKE_SYSTEM_NAME} STREQUAL "Windows"))
     pkg_check_modules(NTK ntk)
     pkg_check_modules(NTK_IMAGES ntk_images)
 
-    pkg_check_modules(FFTW REQUIRED fftw3)
-    pkg_check_modules(MXML REQUIRED mxml)
+    #pkg_check_modules(FFTW REQUIRED fftw3)
+    #pkg_check_modules(MXML REQUIRED mxml)
 
     pkg_check_modules(PORTAUDIO portaudio-2.0>=19)
 
@@ -39,14 +39,16 @@ if(PKG_CONFIG_FOUND AND NOT (${CMAKE_SYSTEM_NAME} STREQUAL "Windows"))
     mark_as_advanced(LASH_LIBRARIES)
     pkg_search_module(DSSI dssi>=0.9.0)
     mark_as_advanced(DSSI_LIBRARIES)
-    pkg_search_module(LIBLO liblo>=0.26 REQUIRED)
-    mark_as_advanced(LIBLO_LIBRARIES)
+    # pkg_search_module(LIBLO liblo>=0.26 REQUIRED)
+    # mark_as_advanced(LIBLO_LIBRARIES)
 else()
     find_package(FFTW REQUIRED)
     find_package(MXML REQUIRED)
     find_package(LIBLO REQUIRED)
     find_package(PORTAUDIO)
 endif()
+
+set(LIBLO_INCLUDE_DIRS "/Users/peter/git/liblo-0.29/")
 
 CHECK_FUNCTION_EXISTS(sched_setscheduler HAVE_SCHEDULER)
 set(CMAKE_REQUIRED_FLAGS "-std=c++11")
@@ -228,6 +230,7 @@ else()
     endif()
 endif()
 
+include_directories(/Users/peter/git/fftw-3.3.8/api/ /Users/peter/git/mxml/)
 ########### Settings dependant code ###########
 # From here on, the setting variables have  been prepared so concentrate
 # on the actual compiling.
@@ -318,8 +321,12 @@ endif()
 
 if(NOT AVOID_ASM)
 	message(STATUS "Compiling with x86 opcode support")
-    add_definitions(-DASM_F2I_YES)
+    # add_definitions(-DASM_F2I_YES)
 endif()
+
+add_definitions(-s USE_ZLIB=1)
+set(FFTW_LIBRARY_DIRS /Users/peter/git/fftw-3.3.8/.libs/)
+set(MXML_LIBRARY_DIRS /Users/peter/git/mxml/)
 
 if (BuildForDebug)
 	set (CMAKE_BUILD_TYPE "Debug")
@@ -338,9 +345,9 @@ else (BuildForDebug)
 			set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${BuildOptions_X86_64Core2}")
 	endif (BuildForCore2_X86_64)
 				
-	if (SUPPORT_SSE)
-		set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${BuildOptions_SSE}")
-	endif (SUPPORT_SSE)
+	#if (SUPPORT_SSE)
+	#	set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${BuildOptions_SSE}")
+	#endif (SUPPORT_SSE)
 	
     if (SUPPORT_NEON AND NOT NoNeonPlease)
 		set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${BuildOptions_NEON}")
@@ -457,7 +464,6 @@ include_directories(
 	${CMAKE_CURRENT_BINARY_DIR}
 	)
 
-
 set(NONGUI_LIBRARIES
 	zynaddsubfx_misc
 	zynaddsubfx_synth
@@ -503,7 +509,11 @@ else()
     set(PTHREAD_LIBRARY pthread)
 endif()
 
+
 target_link_libraries(zynaddsubfx_core
+    /Users/peter/git/liblo-0.29/src/.libs/liblo.dylib
+    /Users/peter/git/fftw-3.3.8/.libs/libfftw3.a
+    /Users/peter/git/mxml/libmxml.a
 	${ZLIB_LIBRARIES}
 	${FFTW_LIBRARIES}
 	${MXML_LIBRARIES}
@@ -531,6 +541,7 @@ add_executable(zynaddsubfx main.cpp)
 
 #Warning: the required ordering of these to get proper linking depends upon the
 #         phase of the moon
+set_target_properties(zynaddsubfx PROPERTIES LINK_FLAGS "-s USE_ZLIB=1 -s ALLOW_MEMORY_GROWTH=1")
 target_link_libraries(zynaddsubfx
     zynaddsubfx_core
 	zynaddsubfx_nio
@@ -621,3 +632,4 @@ package_status(HAVE_ASYNC       "c++ async" "usable"  ${Yellow})
 
 
 message(STATUS "Link libraries: ${ZLIB_LIBRARY} ${FFTW_LIBRARY} ${MXML_LIBRARIES} ${AUDIO_LIBRARIES} ${OS_LIBRARIES}")
+
